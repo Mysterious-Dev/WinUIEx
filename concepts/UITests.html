@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>UI Test Tools Framework </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="UI Test Tools Framework ">
+    <meta name="generator" content="docfx 2.59.4.0">
+    
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="stylesheet" href="../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../styles/docfx.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h2 id="ui-test-tools-framework">UI Test Tools Framework</h2>
+
+<p>A set of UI Test tools to simplify creating WinUI 3 UI Tests. </p>
+<h3 id="features">Features:</h3>
+<ul>
+<li>Helpers for waiting for UI to load or update</li>
+<li>Helpers for grabbing screenshot of UI Elements</li>
+<li>Helpers for analyzing screenshots using pixel analysis via connected component analysis</li>
+<li>Code generator to easily generate UI Tests that loads the Window and starts on the correct UI Thread</li>
+</ul>
+<h3 id="installation">Installation</h3>
+<ol>
+<li><p>Create a new <code>Blank App, Packaged (WinUI 3 in Desktop)</code> project (not the Windows Application Packaging Project).</p>
+<p><img src="https://user-images.githubusercontent.com/1378165/145077633-0918e17b-d234-471d-9c08-26e8273a8372.png" alt="image"></p>
+</li>
+<li><p>Add the <code>WinUIEx.TestTools.MSTest</code> NuGet Packaged</p>
+</li>
+<li>Add the following line to App.xaml.cs at the end of the &quot;OnLaunched&quot; method: 
+<code>cs
+  WinUIEx.TestTools.MSTest.UnitTestClient.Run(m_window);</code></li>
+<li>Next add the following package reference to your project file:
+<code>xml
+&lt;ItemGroup&gt;
+&lt;PackageReference Include=&quot;MSTest.TestAdapter&quot;&gt;
+    &lt;Version&gt;2.2.8&lt;/Version&gt;
+&lt;/PackageReference&gt;
+&lt;/ItemGroup&gt;</code></li>
+<li>Create a new class to contain your tests, and make the class a <code>partial</code> class</li>
+<li>Import the following namespaces:
+<code>cs
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading.Tasks;
+using WinUIEx.TestTools;
+using WinUIEx.TestTools.MSTest;</code></li>
+<li>Mark the class with the <code>[TestClass]</code> attribute</li>
+<li><p>Add a UI Test method. Example:</p>
+<pre><code class="lang-cs">[WinUITestMethod]
+public async Task TestGridArrange()
+{
+ var grid = new Grid() { Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Red) };
+ WindowContext.Content = grid;
+ await grid.LoadAsync();
+ Assert.AreEqual(WindowContext.Bounds.Width, grid.ActualWidth, &quot;Full Width&quot;);
+ Assert.AreEqual(WindowContext.Bounds.Height, grid.ActualHeight, &quot;Full height&quot;);
+ grid.Width = 300;
+ grid.Height = 100;
+ await grid.LayoutUpdatedAsync();
+ Assert.AreEqual(300, grid.ActualWidth, &quot;ActualWidth&quot;);
+ Assert.AreEqual(100, grid.ActualHeight, &quot;ActualHeight&quot;);
+
+ var bitmap = await grid.AsBitmapAsync();
+ Assert.AreEqual(300, bitmap.PixelWidth);
+ Assert.AreEqual(100, bitmap.PixelHeight);
+
+ var blobs = await grid.FindConnectedPixelsAsync(Microsoft.UI.Colors.Red);
+ Assert.AreEqual(1, blobs.Count);
+ Assert.AreEqual(300, blobs[0].Width);
+ Assert.AreEqual(100, blobs[0].Height);
+
+ grid.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Green);
+ blobs = await grid.FindConnectedPixelsAsync(Microsoft.UI.Colors.Green);
+ Assert.AreEqual(1, blobs.Count);
+ Assert.AreEqual(300, blobs[0].Width);
+ Assert.AreEqual(100, blobs[0].Height);
+}
+</code></pre></li>
+</ol>
+<h3 id="things-to-note">Things to note:</h3>
+<p>Class must be <code>partial</code> for the UI Test code generator to work</p>
+<p>Launching tests with the debugger does not currently work in Visual Studio.
+If you need to debug, add the following line of code to launch a debugger after the normal run has started:</p>
+<pre><code class="lang-cs">   System.Diagnostics.Debugger.Launch();
+</code></pre><p>When this code is hit, a dialog will pop up asking you to pick a VS instance for debugging. Pick the active instance where you have your tests.</p>
+<p>New <code>WindowContext</code> and <code>DispatcherQueue</code> properties are auto-generated by the code generator and gives you access to the current window.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/dotMorten/WinUIEx/blob/main/docs/concepts/UITests.md/#L1" class="contribution-link">Improve this Doc</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  </body>
+</html>
